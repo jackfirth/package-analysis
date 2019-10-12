@@ -9,9 +9,11 @@
               "package-analysis")))
 
 (define deps
-  (list "base"))
+  (list "base"
+        "rebellion"))
 
 (define build-deps
-  (list "racket-doc"
+  (list "net-doc"
+        "racket-doc"
         "rackunit-lib"
         "scribble-lib"))
