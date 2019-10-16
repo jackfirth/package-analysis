@@ -10,7 +10,9 @@
   [get-package
    (->* (immutable-string?) (#:client package-client?) package-details?)]
   [get-all-packages
-   (->* () (#:client package-client?) (immutable-set/c package-details?))]))
+   (->* () (#:client package-client?) (immutable-set/c package-details?))]
+  [get-dependency-graph
+   (->* () (#:client package-client?) multidict?)]))
 
 (require net/url
          package-analysis/data-model
@@ -20,7 +22,9 @@
          racket/string
          rebellion/base/immutable-string
          rebellion/base/option
+         rebellion/collection/entry
          rebellion/collection/list
+         rebellion/collection/multidict
          rebellion/type/record
          rebellion/type/reference)
 
@@ -29,14 +33,15 @@
 (define (immutable-set/c contract) (set/c contract #:cmp 'equal))
 
 (define-reference-type package-client
-  (catalog all-packages-cache details-cache)
+  (catalog all-packages-cache details-cache dependency-graph-cache)
   #:constructor-name constructor:package-client)
 
 (define (make-package-client catalog)
   (constructor:package-client
    #:catalog catalog
    #:all-packages-cache (box #f)
-   #:details-cache (make-hash)))
+   #:details-cache (make-hash)
+   #:dependency-graph-cache (box #f)))
 
 (define official-catalog (string->url "https://pkgs.racket-lang.org"))
 
@@ -147,3 +152,18 @@
   (for/set ([name (in-hash-keys all-packages)])
     (package-client-load-package! client name)
     (present-value (hash-ref (package-client-details-cache client) name))))
+
+(define (package-client-load-dependency-graph! client)
+  (define cache (package-client-dependency-graph-cache client))
+  (when (false? (unbox cache))
+    (define graph
+      (for*/multidict
+          ([pkg (in-immutable-set (get-all-packages #:client client))]
+           [dep (in-immutable-set (package-details-dependencies pkg))])
+        (entry (package-details-name pkg)
+               (package-dependency-source dep))))
+    (set-box! cache graph)))
+
+(define (get-dependency-graph #:client [client (current-package-client)])
+  (package-client-load-dependency-graph! client)
+  (unbox (package-client-dependency-graph-cache client)))
