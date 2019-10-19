@@ -8,7 +8,8 @@
   [make-package-client (-> url? package-client?)]
   [current-package-client (parameter/c package-client?)]
   [get-package
-   (->* (immutable-string?) (#:client package-client?) package-details?)]
+   (->* (immutable-string?) (#:client package-client?)
+        (option/c package-details?))]
   [get-all-packages
    (->* () (#:client package-client?) (immutable-set/c package-details?))]
   [get-dependency-graph
