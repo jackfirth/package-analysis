@@ -12,8 +12,13 @@
         (option/c package-details?))]
   [get-all-packages
    (->* () (#:client package-client?) (immutable-set/c package-details?))]
-  [get-dependency-graph
-   (->* () (#:client package-client?) multidict?)]))
+  [get-dependency-graph (->* () (#:client package-client?) multidict?)]
+  [get-transitive-dependencies
+   (->* (immutable-string?) (#:client package-client?)
+        (set/c immutable-string?))]
+  [get-transitive-clients
+   (->* (immutable-string?) (#:client package-client?)
+        (set/c immutable-string?))]))
 
 (require net/url
          package-analysis/data-model
@@ -168,3 +173,29 @@
 (define (get-dependency-graph #:client [client (current-package-client)])
   (package-client-load-dependency-graph! client)
   (unbox (package-client-dependency-graph-cache client)))
+
+(define (get-transitive-dependencies
+         pkg #:client [client (current-package-client)])
+  (define dep-graph (get-dependency-graph #:client client))
+  (transitive-deps pkg dep-graph))
+
+(define (get-transitive-clients pkg #:client [client (current-package-client)])
+  (define dep-graph (get-dependency-graph #:client client))
+  (transitive-deps pkg (multidict-inverse dep-graph)))
+
+(define (transitive-deps pkg dep-graph)
+  (let loop ([unanalyzed-packages (set pkg)]
+             [analyzed-packages (set)]
+             [known-dependencies (set)])
+    (cond
+      [(set-empty? unanalyzed-packages) known-dependencies]
+      [else
+       (define next (set-first unanalyzed-packages))
+       (define rest (set-rest unanalyzed-packages))
+       (define new-direct-deps
+         (set-subtract (multidict-ref dep-graph next)
+                       analyzed-packages
+                       known-dependencies))
+       (loop (set-union rest new-direct-deps)
+             (set-add analyzed-packages next)
+             (set-union known-dependencies new-direct-deps))])))

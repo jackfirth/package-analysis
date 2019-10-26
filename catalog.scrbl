@@ -26,3 +26,18 @@
          multidict?]{
  Returns all dependency relationships in the package catalog, in the form of a
  multidict mapping package names to the names of their dependencies.}
+
+@defproc[(get-transitive-dependencies
+          [pkg immutable-string?]
+          [#:client client package-client? (current-package-client)])
+         (set/c immutable-string?)]{
+ Queries the package catalog with @racket[client] and returns a set of all
+ dependencies of @racket[pkg], including both direct and indirect dependencies.}
+
+@defproc[(get-transitive-clients
+          [pkg immutable-string?]
+          [#:client client package-client? (current-package-client)])
+         (set/c immutable-string?)]{
+ Queries the package catalog with @racket[client] and returns a set of all
+ clients of @racket[pkg] --- that is, all packages that depend @emph{on}
+ @racket[pkg] --- including both direct and indirect clients.}
