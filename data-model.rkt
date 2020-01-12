@@ -74,7 +74,7 @@
 
 (define-tuple-type package-version
   (major-part minor-part patch-part release-part)
-  #:constructor-name constructor:package-version)
+  #:omit-root-binding)
 
 (define (package-version major minor [patch 0] [release 0])
   (constructor:package-version major minor patch release))
@@ -87,7 +87,7 @@
 
 (define-record-type package-dependency
   (source lower-version-bound platform-requirement)
-  #:constructor-name constructor:package-dependency)
+  #:omit-root-binding)
 
 (define (package-dependency
          #:source source
@@ -108,7 +108,7 @@
    dependencies
    modules
    ring)
-  #:constructor-name constructor:package-details)
+  #:omit-root-binding)
 
 (define (package-details #:source source
                          #:checksum checksum
