@@ -31,14 +31,14 @@
          rebellion/collection/entry
          rebellion/collection/list
          rebellion/collection/multidict
-         rebellion/type/record
-         rebellion/type/reference)
+         rebellion/type/object
+         rebellion/type/record)
 
 ;@------------------------------------------------------------------------------
 
 (define (immutable-set/c contract) (set/c contract #:cmp 'equal))
 
-(define-reference-type package-client
+(define-object-type package-client
   (catalog all-packages-cache details-cache dependency-graph-cache)
   #:constructor-name constructor:package-client)
 
